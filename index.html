@@ -824,7 +824,6 @@
   .dot-proc { background: var(--proc); }
   .dot-warn { background: #e55; }
   .dot-info { background: #888; }
-  .dot-ai   { background: #7c3aed; }
 
   .detail-block ul {
     list-style: none;
@@ -872,14 +871,6 @@
   }
 
   .assumption-item::before { display: none; }
-
-  .ai-item {
-    background: rgba(124,58,237,0.06);
-    border-left: 3px solid #7c3aed;
-    border-radius: 0 4px 4px 0;
-    padding: 0.5rem 0.75rem;
-    padding-left: 0.75rem;
-  }
 
   .ai-item::before { display: none; }
 
@@ -1360,12 +1351,6 @@ const assignments = {
           "Students have prior experience with synthesis, not only with citation",
           "Students are reading the assigned texts carefully before drafting",
           "Students can distinguish their own voice from the sources they use"
-        ],
-        ai: [
-          "Students may use AI to generate thesis statements or topic sentences",
-          "AI can be used productively to pressure-test a claim or find counterarguments",
-          "Students may use AI to paraphrase or summarize sources, obscuring genuine engagement",
-          "Prompt: have students compare their rough thesis to an AI-generated one and articulate the difference"
         ]
       },
       prod: {
@@ -1399,12 +1384,6 @@ const assignments = {
           "Peer review produces useful feedback if assigned",
           "Students have time between drafts to gain distance from their own writing",
           "Students know how to read their own drafts critically"
-        ],
-        ai: [
-          "AI can be used to generate entire sections, replacing thinking with output",
-          "Students may use AI to improve prose style, losing their own voice in the process",
-          "Productively: AI as a revision reader asking what is unclear in each paragraph",
-          "Instructors should clarify expectations around AI use in the syllabus and prompt"
         ]
       },
       proc: {
@@ -1438,12 +1417,6 @@ const assignments = {
           "The grade and comments tell the same story",
           "Students will transfer lessons to future assignments without prompting",
           "Feedback given once is sufficient for growth"
-        ],
-        ai: [
-          "Students may use AI to interpret instructor comments: asking what a comment means",
-          "AI can help students identify patterns across multiple pieces of feedback",
-          "Productively: ask students to generate a revision plan using your comments as input",
-          "AI cannot replace the relational dimension of instructor feedback"
         ]
       }
     }
@@ -1490,11 +1463,6 @@ const assignments = {
           "Students find something genuinely interesting in the material",
           "Students understand that a discussion post is an intellectual act, not a compliance task",
           "The Wednesday deadline allows adequate time to read and think"
-        ],
-        ai: [
-          "AI can generate plausible-sounding posts that lack authentic engagement",
-          "Students may use AI to locate ideas from readings they have not read",
-          "Productively: AI as a thought-partner to stress-test an idea before posting"
         ]
       },
       prod: {
@@ -1528,12 +1496,6 @@ const assignments = {
           "The forum interface supports threaded, visible conversation",
           "Students are comfortable enough to disagree in writing",
           "Two required replies is the right amount to generate meaningful dialogue"
-        ],
-        ai: [
-          "AI can generate filler replies that mimic engagement without substance",
-          "Students may use AI to respond to posts they have not read",
-          "Productively: AI can help students sharpen a counterargument before posting it",
-          "Embedding a brief in-class reference to discussion threads reduces AI substitution"
         ]
       },
       proc: {
@@ -1566,11 +1528,6 @@ const assignments = {
           "The grading rubric rewards genuine thinking, not word count",
           "Discussion connects meaningfully to other course assessments",
           "Students are intrinsically motivated to engage beyond the minimum"
-        ],
-        ai: [
-          "Without follow-through, AI-assisted posts leave no intellectual residue",
-          "If discussion is never referenced again, there is no cost to AI substitution",
-          "Productively: a brief reflection prompt about how discussion changed your thinking creates accountability"
         ]
       }
     }
@@ -1620,12 +1577,6 @@ const assignments = {
           "Students understand the relationship between slide text and spoken words",
           "Students will practice independently without external accountability",
           "Slide software proficiency is not a barrier to entry"
-        ],
-        ai: [
-          "AI can generate slide content and speaker notes rapidly, reducing original thinking",
-          "AI-generated slides may be polished but disconnected from the research itself",
-          "Productively: AI as a practice audience asking what questions a listener might have",
-          "Ask students to narrate their design decisions in a brief cover note"
         ]
       },
       prod: {
@@ -1659,12 +1610,6 @@ const assignments = {
           "Classmates will be attentive, respectful audience members",
           "Technical equipment is reliable and familiar to students",
           "Students know how to manage time across a multi-part presentation"
-        ],
-        ai: [
-          "AI can simulate an audience and generate Q and A questions for rehearsal practice",
-          "Students may rely on AI-generated speaker notes they have not internalized",
-          "Productively: AI roleplay as a skeptical audience member during preparation",
-          "In-the-moment delivery cannot be AI-assisted: authenticity is built into the structure"
         ]
       },
       proc: {
@@ -1698,11 +1643,6 @@ const assignments = {
           "The Q and A generates insight that carries forward",
           "Instructor feedback reaches students in a usable form and time frame",
           "Students know what growth looks like after a presentation experience"
-        ],
-        ai: [
-          "AI can help students draft a post-presentation reflection to consolidate learning",
-          "Ask students to document one question from Q and A that complicated their thinking",
-          "AI has no role in capturing the relational, real-time dimension of live presentation"
         ]
       }
     }
@@ -1752,12 +1692,6 @@ const assignments = {
           "Students have access to and know how to use academic databases",
           "Students can evaluate source quality, not only source existence",
           "Long-term project management is a skill they have already developed"
-        ],
-        ai: [
-          "AI can generate research questions and annotated bibliography entries rapidly",
-          "Students may outsource topic development to AI, bypassing the intellectual work of inquiry",
-          "Productively: AI to stress-test a research question by generating likely objections",
-          "Proposal conferences create accountability that AI cannot replicate"
         ]
       },
       prod: {
@@ -1791,12 +1725,6 @@ const assignments = {
           "Milestones are actually submitted and used as learning checkpoints",
           "Research deepens the argument rather than simply accumulating sources",
           "Peer reviewers have sufficient expertise and commitment to give useful feedback"
-        ],
-        ai: [
-          "AI can generate large sections of text that bypass genuine research engagement",
-          "Productively: AI as research assistant summarizing a difficult article for initial orientation",
-          "Students may outsource synthesis to AI, producing fluent but hollow arguments",
-          "Milestone submissions with instructor conferences create accountability AI cannot replace"
         ]
       },
       proc: {
@@ -1830,12 +1758,6 @@ const assignments = {
           "Students know how to close a project: to integrate and conclude, not only to stop writing",
           "Research skills transfer automatically to the next context",
           "Students understand their own intellectual growth without being asked to articulate it"
-        ],
-        ai: [
-          "A final reflection prompt comparing the original proposal to the final argument resists AI substitution",
-          "AI can help students draft a research abstract or professional summary of their findings",
-          "Productively: use AI as a next-step consultant asking what to research after this project",
-          "The accumulated learning of a semester-long project is most visible in reflection: design for it"
         ]
       }
     }
@@ -2026,14 +1948,7 @@ function showPhase(phaseKey) {
     + "<div class=\"detail-block\">"
     + "<div class=\"detail-block-label\"><span class=\"label-dot dot-info\" aria-hidden=\"true\"></span>Hidden Assumptions</div>"
     + "<ul aria-label=\"Hidden assumptions\">" + makeList(phase.assumptions, "assumption-item") + "</ul>"
-    + "</div>"
-
-    + "<div class=\"detail-block detail-block-full\">"
-    + "<div class=\"detail-block-label\"><span class=\"label-dot dot-ai\" aria-hidden=\"true\"></span>AI in This Phase</div>"
-    + "<ul aria-label=\"AI roles in this phase\">" + makeList(phase.ai, "ai-item") + "</ul>"
-    + "</div>"
-
-    + "</div></div>";
+    + "</div>"+ "</div></div>";
 
   document.getElementById("phase-content").innerHTML = html;
 }
