@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment X-Ray — Revealing the Hidden Structure of Student Work</title>
+<style>
+  /* ─── Design Tokens ─────────────────────────────────────────────────── */
+  :root {
+    --navy:       #1a2035;
+    --navy-mid:   #243050;
+    --navy-light: #2f3d63;
+    --slate:      #3d4f72;
+    --steel:      #6b7a99;
+    --mist:       #c8d2e8;
+    --pale:       #eef1f8;
+    --white:      #f8faff;
+
+    --prep:       #3a7bd5;
+    --prep-light: #d6e6fa;
+    --prod:       #d97706;
+    --prod-light: #fde9c0;
+    --proc:       #2a8a5e;
+    --proc-light: #c8eddc;
+
+    --accent:     #7aa4e8;
+    --text-main:  #1a2035;
+    --text-sub:   #4a5472;
+    --text-muted: #7a86a3;
+
+    --radius:     6px;
+    --shadow-sm:  0 2px 8px rgba(26,32,53,0.10);
+    --shadow-md:  0 6px 24px rgba(26,32,53,0.14);
+    --shadow-lg:  0 16px 48px rgba(26,32,53,0.18);
+
+    --font-display: 'Georgia', 'Times New Roman', serif;
+    --font-body:    'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono:    'Courier New', monospace;
+
+    --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── Reset & Base ──────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--pale);
+    color: var(--text-main);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ─── Screen Manager ────────────────────────────────────────────────── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── Utility ───────────────────────────────────────────────────────── */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  button {
+    cursor: pointer;
+    font-family: var(--font-body);
+    border: none;
+    background: none;
+  }
+
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: var(--radius);
+  }
+
+  /* ─── INTRO SCREEN ──────────────────────────────────────────────────── */
+  #intro {
+    background: var(--navy);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle scan-line texture */
+  #intro::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255,255,255,0.012) 3px,
+      rgba(255,255,255,0.012) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Diagnostic grid lines */
+  #intro::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(122,164,232,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(122,164,232,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .intro-card {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .intro-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(122,164,232,0.15);
+    border: 1px solid rgba(122,164,232,0.3);
+    color: var(--accent);
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 2rem;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .intro-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+
+  .intro-title span {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .intro-subtitle {
+    font-size: 1.05rem;
+    color: var(--mist);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .intro-divider {
+    border: none;
+    border-top: 1px solid rgba(122,164,232,0.2);
+    margin: 2rem auto;
+    width: 60%;
+  }
+
+  .intro-premise {
+    font-size: 0.9rem;
+    color: var(--steel);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-style: italic;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--accent);
+    color: var(--navy);
+    padding: 0.9rem 2.2rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 20px rgba(122,164,232,0.35);
+  }
+
+  .btn-primary:hover {
+    background: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(122,164,232,0.4);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-arrow {
+    display: inline-block;
+    transition: transform var(--transition);
+  }
+
+  .btn-primary:hover .btn-arrow { transform: translateX(4px); }
+
+  /* ─── MAIN SCREEN ───────────────────────────────────────────────────── */
+  #main {
+    background: var(--pale);
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── App Header ── */
+  .app-header {
+    background: var(--navy);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid rgba(122,164,232,0.2);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: rgba(122,164,232,0.15);
+    border: 1px solid rgba(122,164,232,0.3);
+    border-radius: var(--radius);
+    display: grid;
+    place-items: center;
+  }
+
+  .logo-icon svg { display: block; }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .header-sep {
+    flex: 1;
+  }
+
+  .header-step {
+    font-size: 0.78rem;
+    color: var(--steel);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── Content area ── */
+  .main-content {
+    flex: 1;
+    padding: 2.5rem 2rem;
+    max-width: 1060px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ─── STEP 1: Assignment Selector ───────────────────────────────────── */
+  #step-select { }
+
+  .step-heading {
+    margin-bottom: 0.4rem;
+  }
+
+  .step-heading h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--navy);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .step-heading p {
+    color: var(--text-sub);
+    font-size: 0.95rem;
+    margin-top: 0.4rem;
+    line-height: 1.6;
+  }
+
+  .step-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .assignment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .assignment-card {
+    background: var(--white);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 1.5rem 1.25rem;
+    text-align: left;
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .assignment-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .assignment-card.selected {
+    border-color: var(--prep);
+    box-shadow: 0 0 0 4px rgba(58,123,213,0.18);
+  }
+
+  .card-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .card-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--mist);
+    border-radius: 50%;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), border-color var(--transition);
+    flex-shrink: 0;
+  }
+
+  .assignment-card.selected .card-check {
+    background: var(--prep);
+    border-color: var(--prep);
+  }
+
+  .card-check::after {
+    content: '';
+    width: 5px; height: 9px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg) translateY(-1px);
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .assignment-card.selected .card-check::after { opacity: 1; }
+
+  /* ─── STEP 2: Surface View ───────────────────────────────────────────── */
+  #step-surface { }
+
+  .surface-panel {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(26,32,53,0.08);
+  }
+
+  .surface-header {
+    background: var(--navy-mid);
+    padding: 1.2rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .surface-header-title {
+    font-family: var(--font-display);
+    color: var(--white);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .surface-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--steel);
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--slate);
+    border-radius: 100px;
+    margin-left: auto;
+  }
+
+  .surface-body {
+    padding: 2rem 1.75rem;
+  }
+
+  .surface-field {
+    margin-bottom: 1.5rem;
+  }
+
+  .surface-field:last-of-type { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 0.73rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  .field-value {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    line-height: 1.65;
+  }
+
+  .field-value.prompt-text {
+    font-style: italic;
+    color: var(--text-sub);
+    border-left: 3px solid var(--mist);
+    padding-left: 1rem;
+    line-height: 1.75;
+  }
+
+  .surface-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    background: var(--pale);
+    padding: 1.25rem 1.75rem;
+    border-top: 1px solid rgba(26,32,53,0.07);
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  /* ─── Concern prompt ─── */
+  .concern-block {
+    background: var(--white);
+    border: 1px solid rgba(58,123,213,0.25);
+    border-radius: 8px;
+    padding: 1.5rem 1.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .concern-block h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--navy);
+    margin-bottom: 0.6rem;
+  }
+
+  .concern-block p {
+    font-size: 0.88rem;
+    color: var(--text-sub);
+    line-height: 1.65;
+    margin-bottom: 1.25rem;
+  }
+
+  .concern-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .concern-chip {
+    background: var(--pale);
+    border: 1px solid var(--mist);
+    color: var(--text-sub);
+    padding: 0.4rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+  }
+
+  .concern-chip:hover {
+    background: var(--prep-light);
+    border-color: var(--prep);
+    color: var(--prep);
+  }
+
+  .concern-chip.active {
+    background: var(--prep-light);
+    border-color: var(--prep);
+    color: var(--prep);
+    font-weight: 600;
+  }
+
+  /* ─── STEP 3: X-Ray View ────────────────────────────────────────────── */
+  #step-xray { }
+
+  /* Scan animation */
+  .xray-scan-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--navy);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .xray-scan-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan-sweep 1.4s ease-in-out forwards;
+  }
+
+  @keyframes scan-sweep {
+    0% { top: 0; opacity: 0.9; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  .scan-text {
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 600;
+    animation: blink-text 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes blink-text {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+
+  .scan-bars {
+    display: flex;
+    gap: 4px;
+  }
+
+  .scan-bar {
+    width: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: bar-pulse 0.8s ease-in-out infinite alternate;
+  }
+
+  .scan-bar:nth-child(1) { height: 18px; animation-delay: 0s; }
+  .scan-bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
+  .scan-bar:nth-child(3) { height: 22px; animation-delay: 0.2s; }
+  .scan-bar:nth-child(4) { height: 36px; animation-delay: 0.3s; }
+  .scan-bar:nth-child(5) { height: 26px; animation-delay: 0.4s; }
+  .scan-bar:nth-child(6) { height: 14px; animation-delay: 0.5s; }
+  .scan-bar:nth-child(7) { height: 32px; animation-delay: 0.6s; }
+
+  @keyframes bar-pulse {
+    from { opacity: 0.3; transform: scaleY(0.6); }
+    to { opacity: 1; transform: scaleY(1); }
+  }
+
+  /* Phase selector */
+  .xray-assignment-context {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .xray-context-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--steel);
+  }
+
+  .xray-context-name {
+    font-family: var(--font-display);
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .xray-context-concern {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--mist);
+    font-style: italic;
+  }
+
+  /* Phase tabs */
+  .phase-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .phase-tab {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 1.1rem 1rem;
+    text-align: left;
+    transition: all var(--transition);
+    cursor: pointer;
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phase-tab::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .phase-tab.active::before { opacity: 1; }
+
+  .phase-tab-prep { color: var(--prep); }
+  .phase-tab-prod { color: var(--prod); }
+  .phase-tab-proc { color: var(--proc); }
+
+  .phase-tab.active.phase-tab-prep {
+    background: var(--prep-light);
+    border-color: var(--prep);
+  }
+
+  .phase-tab.active.phase-tab-prod {
+    background: var(--prod-light);
+    border-color: var(--prod);
+  }
+
+  .phase-tab.active.phase-tab-proc {
+    background: var(--proc-light);
+    border-color: var(--proc);
+  }
+
+  .phase-tab:hover:not(.active) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .phase-number {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: inherit;
+    font-weight: 700;
+    opacity: 0.7;
+  }
+
+  .phase-name {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.1;
+  }
+
+  .phase-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  /* Phase content panel */
+  .phase-panel {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    margin-top: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(26,32,53,0.07);
+    animation: panel-reveal 0.4s ease;
+  }
+
+  @keyframes panel-reveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-header {
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(26,32,53,0.07);
+  }
+
+  .panel-header-prep { background: var(--prep-light); }
+  .panel-header-prod { background: var(--prod-light); }
+  .panel-header-proc { background: var(--proc-light); }
+
+  .panel-header-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .color-prep { color: var(--prep); }
+  .color-prod { color: var(--prod); }
+  .color-proc { color: var(--proc); }
+
+  .panel-header-desc {
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    margin-top: 0.15rem;
+  }
+
+  .panel-body {
+    padding: 1.75rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .panel-body {
+      grid-template-columns: 1fr;
+    }
+    .phase-nav {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detail-block {
+    background: var(--pale);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+
+  .detail-block-full {
+    grid-column: 1 / -1;
+  }
+
+  .detail-block-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .label-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-prep { background: var(--prep); }
+  .dot-prod { background: var(--prod); }
+  .dot-proc { background: var(--proc); }
+  .dot-warn { background: #e55; }
+  .dot-info { background: #888; }
+  .dot-ai   { background: #7c3aed; }
+
+  .detail-block ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .detail-block li {
+    font-size: 0.88rem;
+    color: var(--text-main);
+    line-height: 1.55;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .detail-block li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--mist);
+    font-size: 0.8em;
+  }
+
+  .pinch-item {
+    background: rgba(229, 85, 85, 0.07);
+    border-left: 3px solid #e55;
+    border-radius: 0 4px 4px 0;
+    padding: 0.5rem 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .pinch-item::before { display: none; }
+
+  .assumption-item {
+    background: rgba(108,122,153,0.08);
+    border-left: 3px solid var(--steel);
+    border-radius: 0 4px 4px 0;
+    padding: 0.5rem 0.75rem;
+    padding-left: 0.75rem;
+    font-style: italic;
+    color: var(--text-sub) !important;
+  }
+
+  .assumption-item::before { display: none; }
+
+  .ai-item {
+    background: rgba(124,58,237,0.06);
+    border-left: 3px solid #7c3aed;
+    border-radius: 0 4px 4px 0;
+    padding: 0.5rem 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .ai-item::before { display: none; }
+
+  /* Diagnostic summary */
+  .diagnostic-summary {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 1.75rem;
+    margin-top: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .diagnostic-summary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 5px,
+      rgba(255,255,255,0.008) 5px,
+      rgba(255,255,255,0.008) 6px
+    );
+    pointer-events: none;
+  }
+
+  .diag-heading {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--steel);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .diag-question {
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+    color: var(--white);
+    line-height: 1.5;
+    font-style: italic;
+    position: relative;
+  }
+
+  .diag-question span {
+    color: var(--accent);
+  }
+
+  .diag-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    position: relative;
+  }
+
+  .diag-prompt-chip {
+    font-size: 0.8rem;
+    color: var(--mist);
+    padding: 0.4rem 1rem;
+    border: 1px solid rgba(122,164,232,0.25);
+    border-radius: 100px;
+    line-height: 1.3;
+  }
+
+  /* Navigation buttons */
+  .step-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-sub);
+    background: var(--white);
+    border: 1.5px solid var(--mist);
+    transition: all var(--transition);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--slate);
+    color: var(--navy);
+  }
+
+  .btn-xray {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--navy);
+    color: var(--white);
+    padding: 0.85rem 1.8rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-xray:hover {
+    background: var(--navy-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .btn-xray:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-icon {
+    font-size: 1.1rem;
+  }
+
+  /* Progress indicator */
+  .progress-steps {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .progress-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--mist);
+    transition: background var(--transition);
+  }
+
+  .progress-dot.active { background: var(--prep); }
+  .progress-dot.done { background: var(--navy); }
+
+  .progress-line {
+    flex: 1;
+    height: 1px;
+    background: var(--mist);
+    max-width: 40px;
+  }
+
+  /* Responsive header */
+  @media (max-width: 640px) {
+    .app-header { padding: 0.75rem 1rem; }
+    .main-content { padding: 1.5rem 1rem; }
+    .assignment-grid { grid-template-columns: 1fr 1fr; }
+    .xray-context-concern { display: none; }
+  }
+
+  /* ─── Reduced motion ────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Scan Overlay ──────────────────────────────────────────────────── -->
+<div class="xray-scan-overlay" id="scan-overlay" role="status" aria-live="polite" aria-label="Scanning assignment structure">
+  <div class="scan-line" id="scan-line"></div>
+  <div class="scan-bars" aria-hidden="true">
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+    <div class="scan-bar"></div>
+  </div>
+  <div class="scan-text">Analyzing assignment structure…</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- INTRO SCREEN                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="intro" role="main">
+  <div class="intro-card">
+    <div class="intro-badge">
+      <span class="badge-dot" aria-hidden="true"></span>
+      Faculty Development Tool
+    </div>
+
+    <h1 class="intro-title">
+      Assignment<br><span>X-Ray</span>
+    </h1>
+
+    <p class="intro-subtitle">
+      What becomes visible when you look beneath the final product?
+    </p>
+
+    <hr class="intro-divider" aria-hidden="true">
+
+    <p class="intro-premise">
+      Most assignments are designed from the outside in — what students will submit, when it is due, how it will be graded. But students experience assignments from the inside out: a sequence of cognitive moves, decisions, and moments of confusion that happen long before anything is turned in, and learning that continues long after.
+    </p>
+
+    <p class="intro-premise" style="margin-top: 0.75rem;">
+      This tool surfaces that hidden structure. Select an assignment type and take an X-ray to see what is actually going on beneath the surface.
+    </p>
+
+    <button class="btn-primary" onclick="showScreen('main')" id="start-btn">
+      Begin Examination
+      <span class="btn-arrow" aria-hidden="true">→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MAIN SCREEN                                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="main">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-logo">
+      <div class="logo-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="14" height="14" rx="1.5" stroke="#7aa4e8" stroke-width="1.5"/>
+          <line x1="3" y1="7" x2="17" y2="7" stroke="#7aa4e8" stroke-width="1"/>
+          <line x1="3" y1="11" x2="17" y2="11" stroke="#7aa4e8" stroke-width="1" stroke-dasharray="2 2"/>
+          <line x1="3" y1="15" x2="17" y2="15" stroke="#7aa4e8" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        </svg>
+      </div>
+      <span class="logo-text">Assignment <span>X-Ray</span></span>
+    </div>
+    <div class="header-sep"></div>
+    <div class="header-step" id="header-step" aria-live="polite">Step 1 of 3</div>
+  </header>
+
+  <!-- Content -->
+  <div class="main-content">
+
+    <!-- Progress -->
+    <div class="progress-steps" role="list" aria-label="Progress">
+      <div class="progress-dot active" id="pdot-1" role="listitem" aria-label="Step 1: Select assignment, current"></div>
+      <div class="progress-line" aria-hidden="true"></div>
+      <div class="progress-dot" id="pdot-2" role="listitem" aria-label="Step 2: Surface view"></div>
+      <div class="progress-line" aria-hidden="true"></div>
+      <div class="progress-dot" id="pdot-3" role="listitem" aria-label="Step 3: X-Ray view"></div>
+    </div>
+
+    <!-- ── STEP 1: Select ── -->
+    <div id="step-select">
+      <div class="step-heading">
+        <span class="step-label" aria-hidden="true">Step 1</span>
+        <h1>Select an assignment type</h1>
+        <p>Choose the type of assignment you want to examine. Each carries its own hidden structure.</p>
+      </div>
+
+      <div class="assignment-grid" role="list" aria-label="Assignment types">
+        <button class="assignment-card" role="listitem" aria-pressed="false" onclick="selectAssignment('essay')" id="card-essay">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="card-icon" aria-hidden="true">✍️</div>
+            <div class="card-check" aria-hidden="true"></div>
+          </div>
+          <div class="card-title">Analytical Essay</div>
+          <div class="card-desc">A written argument grounded in evidence, requiring sustained reasoning and revision.</div>
+        </button>
+
+        <button class="assignment-card" role="listitem" aria-pressed="false" onclick="selectAssignment('discussion')" id="card-discussion">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="card-icon" aria-hidden="true">💬</div>
+            <div class="card-check" aria-hidden="true"></div>
+          </div>
+          <div class="card-title">Discussion Post</div>
+          <div class="card-desc">An asynchronous written exchange designed to deepen engagement with course ideas.</div>
+        </button>
+
+        <button class="assignment-card" role="listitem" aria-pressed="false" onclick="selectAssignment('presentation')" id="card-presentation">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="card-icon" aria-hidden="true">🎤</div>
+            <div class="card-check" aria-hidden="true"></div>
+          </div>
+          <div class="card-title">Presentation</div>
+          <div class="card-desc">An oral or multimodal delivery that synthesizes research and communicates to an audience.</div>
+        </button>
+
+        <button class="assignment-card" role="listitem" aria-pressed="false" onclick="selectAssignment('project')" id="card-project">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="card-icon" aria-hidden="true">🗂️</div>
+            <div class="card-check" aria-hidden="true"></div>
+          </div>
+          <div class="card-title">Research Project</div>
+          <div class="card-desc">A multi-stage inquiry requiring original research, synthesis, and extended planning.</div>
+        </button>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-xray" onclick="goToSurface()" id="btn-to-surface" disabled aria-disabled="true">
+          View Surface Description
+          <span class="btn-arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Surface ── -->
+    <div id="step-surface" style="display:none;">
+      <div class="step-heading">
+        <span class="step-label" aria-hidden="true">Step 2 — Surface View</span>
+        <h1>What we usually see</h1>
+        <p>This is the assignment as it typically appears — what an instructor drafts and what students receive.</p>
+      </div>
+
+      <div class="surface-panel">
+        <div class="surface-header">
+          <div>
+            <div class="surface-header-title" id="surface-title">Assignment Title</div>
+          </div>
+          <span class="surface-tag">Surface Level</span>
+        </div>
+        <div class="surface-body">
+          <div class="surface-field">
+            <div class="field-label">Assignment Prompt</div>
+            <div class="field-value prompt-text" id="surface-prompt"></div>
+          </div>
+          <div class="surface-field">
+            <div class="field-label">Learning Objectives</div>
+            <div class="field-value" id="surface-objectives"></div>
+          </div>
+          <div class="surface-field">
+            <div class="field-label">What Students Submit</div>
+            <div class="field-value" id="surface-deliverable"></div>
+          </div>
+        </div>
+        <div class="surface-meta">
+          <div class="meta-item">
+            <div class="field-label">Format</div>
+            <div class="field-value" id="surface-format" style="font-size:0.9rem;"></div>
+          </div>
+          <div class="meta-item">
+            <div class="field-label">Length / Scope</div>
+            <div class="field-value" id="surface-length" style="font-size:0.9rem;"></div>
+          </div>
+          <div class="meta-item">
+            <div class="field-label">Grading Basis</div>
+            <div class="field-value" id="surface-grading" style="font-size:0.9rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Concern prompt -->
+      <div class="concern-block">
+        <h3>Before the X-ray: What seems off?</h3>
+        <p>Instructors often sense something is not working with an assignment before they can name it. Do any of these ring true for this one?</p>
+        <div class="concern-options" role="group" aria-label="Select concerns">
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Students miss the point of the prompt</button>
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Results are uneven across the class</button>
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Work arrives late or feels rushed</button>
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Surface-level engagement — no real thinking</button>
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Hard to give meaningful feedback</button>
+          <button class="concern-chip" onclick="toggleConcern(this)" aria-pressed="false">Students don't seem to learn from it</button>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-secondary" onclick="goBack('select')">← Change Assignment</button>
+        <button class="btn-xray" onclick="triggerXray()">
+          <span class="btn-icon" aria-hidden="true">⬡</span>
+          Take an X-Ray
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: X-Ray ── -->
+    <div id="step-xray" style="display:none;">
+      <div class="step-heading">
+        <span class="step-label" aria-hidden="true">Step 3 — X-Ray View</span>
+        <h1>What the structure reveals</h1>
+        <p>Beneath the surface, every assignment is a multi-phase learning experience. Select each phase to inspect its hidden dimensions.</p>
+      </div>
+
+      <!-- Assignment context bar -->
+      <div class="xray-assignment-context" aria-label="Assignment being examined">
+        <div class="xray-context-label">Examining</div>
+        <div class="xray-context-name" id="xray-context-name"></div>
+        <div class="xray-context-concern" id="xray-context-concern" aria-label="Noted concern"></div>
+      </div>
+
+      <!-- Phase tabs -->
+      <nav class="phase-nav" aria-label="Assignment phases">
+        <button class="phase-tab phase-tab-prep" id="tab-prep" onclick="showPhase('prep')" aria-selected="true" role="tab">
+          <span class="phase-number">Phase 1</span>
+          <span class="phase-name">Preparation</span>
+          <span class="phase-sub">Before work begins</span>
+        </button>
+        <button class="phase-tab phase-tab-prod" id="tab-prod" onclick="showPhase('prod')" aria-selected="false" role="tab">
+          <span class="phase-number">Phase 2</span>
+          <span class="phase-name">Production</span>
+          <span class="phase-sub">While work is being made</span>
+        </button>
+        <button class="phase-tab phase-tab-proc" id="tab-proc" onclick="showPhase('proc')" aria-selected="false" role="tab">
+          <span class="phase-number">Phase 3</span>
+          <span class="phase-name">Processing</span>
+          <span class="phase-sub">After submission</span>
+        </button>
+      </nav>
+
+      <!-- Phase content -->
+      <div id="phase-content" role="tabpanel" aria-live="polite"></div>
+
+      <!-- Diagnostic summary -->
+      <div class="diagnostic-summary" aria-label="Reflection prompt">
+        <div class="diag-heading">Diagnostic Reflection</div>
+        <div class="diag-question" id="diag-question">
+          "Now that you can see the full structure — <span>where does this assignment leave students most on their own?</span>"
+        </div>
+        <div class="diag-prompts" aria-label="Reflection prompts">
+          <div class="diag-prompt-chip">What do students need before they can begin well?</div>
+          <div class="diag-prompt-chip">Where does instructor presence disappear?</div>
+          <div class="diag-prompt-chip">What learning happens only if you design for it?</div>
+          <div class="diag-prompt-chip">What does the rubric actually reward?</div>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-secondary" onclick="goBack('surface')">← Return to Surface View</button>
+        <button class="btn-secondary" onclick="restart()">Start Over</button>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /main screen -->
+
+<script>
+/* ─── Assignment Data ─────────────────────────────────────────────────── */
+const assignments = {
+
+  essay: {
+    name: 'Analytical Essay',
+    icon: '✍️',
+    surface: {
+      title: 'Analytical Essay — Course Argument',
+      prompt: 'Drawing on at least four course readings and one outside source, write an essay in which you develop and defend an original argument about a central theme or tension in the course material. Your essay should demonstrate close reading, synthesis across sources, and clarity of reasoning.',
+      objectives: 'Develop an arguable thesis; analyze primary and secondary sources; construct a sustained, evidence-based argument; practice academic writing conventions.',
+      deliverable: 'A 1,500–2,000-word formal essay, submitted as a Word document or PDF via the course LMS.',
+      format: 'Academic prose',
+      length: '1,500–2,000 words',
+      grading: 'Thesis, evidence, reasoning, mechanics'
+    },
+    phases: {
+      prep: {
+        colorClass: 'panel-header-prep',
+        titleColor: 'color-prep',
+        dot: 'dot-prep',
+        label: 'Preparation — Before Work Begins',
+        desc: 'What students need before they can begin well',
+        learners: [
+          'Reading and annotating source material',
+          'Identifying a genuine intellectual question worth arguing',
+          'Distinguishing between a topic, a claim, and an argument',
+          'Understanding what "analytical" versus "descriptive" writing requires',
+          'Reviewing past writing feedback and addressing known weaknesses'
+        ],
+        instructors: [
+          'Making the argumentative expectations explicit — what a thesis is and is not',
+          'Providing models of strong student essays from prior terms',
+          'Offering pre-writing scaffolds (claim starters, argument maps)',
+          'Clarifying which readings are most relevant and why',
+          'Explaining how sources should be used, not just cited'
+        ],
+        pinchpoints: [
+          'Students conflate summary with analysis — they retell rather than argue',
+          'Thesis-writing feels abstract without concrete examples of what counts',
+          'Students underestimate time needed to form a real position',
+          'Reading load can feel disconnected from the writing task'
+        ],
+        assumptions: [
+          'Students know what an academic argument looks like in this discipline',
+          'Students have prior experience with synthesis, not just citation',
+          'Students are reading the assigned texts carefully before drafting',
+          'Students can distinguish their own voice from the sources they use'
+        ],
+        ai: [
+          'Students may use AI to generate thesis statements or topic sentences',
+          'AI can be productively used to pressure-test a claim or find counterarguments',
+          'Students may use AI to paraphrase or summarize sources — obscuring engagement',
+          'Prompt: Have students compare their rough thesis to an AI-generated one and articulate the difference'
+        ]
+      },
+      prod: {
+        colorClass: 'panel-header-prod',
+        titleColor: 'color-prod',
+        dot: 'dot-prod',
+        label: 'Production — While Work Is Being Made',
+        desc: 'The cognitive and creative labor of drafting, revising, and deciding',
+        learners: [
+          'Drafting and re-drafting — often discovering the argument while writing',
+          'Making structural decisions about what goes where and why',
+          'Managing the gap between what they mean and what the draft actually says',
+          'Integrating and attributing sources without losing their own voice',
+          'Revising at the sentence level after the structure is clear'
+        ],
+        instructors: [
+          'Providing a draft deadline or checkpoint to prevent last-minute writing',
+          'Offering formative feedback on a partial draft or outline',
+          'Running a workshop or peer review session',
+          'Remaining available during drafting via office hours or annotation tools',
+          'Modeling the revision process — not just the polished product'
+        ],
+        pinchpoints: [
+          'Students treat the first draft as the final draft — no real revision occurs',
+          'Paragraph organization collapses because the argument was never fully worked out',
+          'Students quote heavily to avoid having to reason through ideas themselves',
+          'Feedback arrives after submission — when it can no longer be used'
+        ],
+        assumptions: [
+          'Students revise substantively, not just for spelling and grammar',
+          'Peer review produces useful feedback if assigned',
+          'Students have time between drafts to gain distance from their own writing',
+          'Students know how to read their own drafts critically'
+        ],
+        ai: [
+          'AI can be used to generate entire sections — replacing thinking with output',
+          'Students may use AI to "clean up" prose, losing their own voice',
+          'Productively: AI as a revision reader — "What is unclear in this paragraph?"',
+          'Instructors should clarify expectations around AI use in the syllabus and prompt'
+        ]
+      },
+      proc: {
+        colorClass: 'panel-header-proc',
+        titleColor: 'color-proc',
+        dot: 'dot-proc',
+        label: 'Processing — After Submission',
+        desc: 'Where consolidation, reflection, and transfer can happen — if designed in',
+        learners: [
+          'Reading and making sense of instructor feedback',
+          'Reflecting on what changed from their initial thinking to the final draft',
+          'Connecting their argument back to broader course themes',
+          'Deciding whether (and how) to revise if revision is an option',
+          'Applying lessons from this essay to the next writing task'
+        ],
+        instructors: [
+          'Writing feedback that is legible, actionable, and forward-looking',
+          'Distinguishing between feedback for this essay and feedback for future growth',
+          'Holding brief reflection conversations — conferences, discussion posts',
+          'Returning work in time for it to inform the next assignment',
+          'Sharing class-wide patterns without identifying individual students'
+        ],
+        pinchpoints: [
+          'Students look at the grade and ignore the comments',
+          'Feedback is extensive but not prioritized — students don't know where to start',
+          'Learning from the essay doesn't transfer because there is no structured reflection',
+          'No opportunity to revise means errors become reinforced, not corrected'
+        ],
+        assumptions: [
+          'Students know how to read and act on written feedback',
+          'The grade and comments tell the same story',
+          'Students will transfer lessons to future assignments without prompting',
+          'Feedback given once is sufficient for growth'
+        ],
+        ai: [
+          'Students may use AI to interpret your feedback — "What does this comment mean?"',
+          'AI can help students identify patterns across multiple pieces of feedback',
+          'Productively: ask students to generate a revision plan using your comments as input',
+          'AI cannot replace the relational dimension of instructor feedback'
+        ]
+      }
+    }
+  },
+
+  discussion: {
+    name: 'Discussion Post',
+    icon: '💬',
+    surface: {
+      title: 'Weekly Discussion Post — Engaged Response',
+      prompt: 'By Wednesday at 11:59 PM, post a 250–350 word response to this week's discussion question. Your post should reference at least two course readings and demonstrate your own thinking, not just a summary of the material. By Friday, reply to two of your classmates' posts with substantive engagement.',
+      objectives: 'Apply course concepts to real questions; practice intellectual exchange; develop a scholarly voice; build community.',
+      deliverable: 'An initial post (250–350 words) and two peer responses (100+ words each) in the course LMS discussion forum.',
+      format: 'Informal academic prose',
+      length: '250–350 words + two replies',
+      grading: 'Timeliness, evidence of reading, quality of engagement'
+    },
+    phases: {
+      prep: {
+        colorClass: 'panel-header-prep',
+        titleColor: 'color-prep',
+        dot: 'dot-prep',
+        label: 'Preparation — Before Work Begins',
+        desc: 'What students need before they can begin well',
+        learners: [
+          'Reading (and re-reading) assigned material with the discussion question in mind',
+          'Annotating for ideas they genuinely find interesting or puzzling',
+          'Deciding on a perspective to develop — not just describing what they read',
+          'Understanding what distinguishes a substantive post from a summary'
+        ],
+        instructors: [
+          'Writing a discussion question that is genuinely open — not a test with a right answer',
+          'Explaining what "substantive" means with concrete examples',
+          'Establishing norms for intellectual disagreement and debate',
+          'Posting the question early enough for students to read before deadline'
+        ],
+        pinchpoints: [
+          'Students post without having done the reading carefully',
+          'The question is too broad or too leading — producing similar, circular posts',
+          'Students don't know the difference between a discussion post and a summary email'
+        ],
+        assumptions: [
+          'Students are completing the readings before posting',
+          'Students find something genuinely interesting in the material',
+          'Students understand that a discussion post is an intellectual act, not a compliance task',
+          'The Wednesday deadline allows adequate time to read and think'
+        ],
+        ai: [
+          'AI can generate plausible-sounding posts that lack authentic engagement',
+          'Students may use AI to "find" ideas from readings they have not read',
+          'Productively: AI as a thought-partner — "Here is my rough idea. What counterarguments should I address?"'
+        ]
+      },
+      prod: {
+        colorClass: 'panel-header-prod',
+        titleColor: 'color-prod',
+        dot: 'dot-prod',
+        label: 'Production — While Work Is Being Made',
+        desc: 'The cognitive and social labor of posting and responding',
+        learners: [
+          'Drafting a position and deciding how much to commit to it',
+          'Integrating course concepts without falling into jargon',
+          'Reading classmates' posts with genuine attention',
+          'Responding in ways that advance — not just compliment — the conversation',
+          'Managing the social risk of intellectual disagreement'
+        ],
+        instructors: [
+          'Modeling what thoughtful engagement looks like by occasionally posting themselves',
+          'Connecting discussion threads to upcoming class sessions',
+          'Monitoring for students who are invisible in discussion',
+          'Prompting deeper threads with follow-up questions',
+          'Making clear that replies should extend thinking, not just affirm'
+        ],
+        pinchpoints: [
+          'Reply posts are shallow — "Great point, I agree!" — without substance',
+          'High-posting students crowd out quieter voices',
+          'Students reply only to popular posts, leaving many unreplied to',
+          'Discussion becomes performative rather than genuinely exploratory'
+        ],
+        assumptions: [
+          'Students read their classmates' posts before replying',
+          'The forum interface supports threaded, visible conversation',
+          'Students are comfortable enough to disagree in writing',
+          'Two required replies is the right amount to generate meaningful dialogue'
+        ],
+        ai: [
+          'AI can generate filler replies that mimic engagement without substance',
+          'Students may use AI to respond to classmates' posts they haven't read',
+          'Productively: AI can help students sharpen a counterargument before posting it',
+          'Embedding a brief in-class reference to discussion threads reduces AI substitution'
+        ]
+      },
+      proc: {
+        colorClass: 'panel-header-proc',
+        titleColor: 'color-proc',
+        dot: 'dot-proc',
+        label: 'Processing — After Submission',
+        desc: 'Where learning from dialogue either consolidates or evaporates',
+        learners: [
+          'Revisiting threads to see how the conversation evolved after they posted',
+          'Noticing what arguments they found persuasive and why',
+          'Connecting discussion content to the next reading or class session',
+          'Reflecting on whether their view shifted — and what that shift reveals'
+        ],
+        instructors: [
+          'Bringing discussion highlights into synchronous class time',
+          'Synthesizing emergent themes across the thread for the class',
+          'Naming intellectual moves students made well — and attributing them',
+          'Providing brief feedback on quality patterns, not just checking a completion box',
+          'Treating the forum as a resource, not a chore'
+        ],
+        pinchpoints: [
+          'Discussion is graded on completion rather than quality — no growth incentive',
+          'The conversation ends at the deadline and is never returned to',
+          'Instructor feedback is absent — students receive no signal about quality',
+          'Learning from discussion is left entirely to the student to notice and transfer'
+        ],
+        assumptions: [
+          'Students return to the thread after posting to read responses to their ideas',
+          'The grading rubric rewards genuine thinking, not word count',
+          'Discussion connects meaningfully to other course assessments',
+          'Students are intrinsically motivated to engage beyond the minimum'
+        ],
+        ai: [
+          'Without follow-through, AI-assisted posts leave no intellectual residue',
+          'If discussion is never referenced again, there is no cost to AI substitution',
+          'Productively: a brief reflection prompt ("How did the discussion change your thinking?") creates accountability'
+        ]
+      }
+    }
+  },
+
+  presentation: {
+    name: 'Presentation',
+    icon: '🎤',
+    surface: {
+      title: 'Research Presentation — Oral Synthesis',
+      prompt: 'During the final two weeks of class, each student (or group) will deliver a 12–15 minute presentation on their research topic, followed by 5 minutes of Q&A. Your presentation should make a clear argument, present evidence, and be designed for your audience — your classmates and instructor. Slides are required.',
+      objectives: 'Communicate research to a live audience; practice oral argumentation; synthesize a semester of inquiry; respond to questions in real time.',
+      deliverable: 'A 12–15 minute slide-based presentation plus Q&A, delivered live or via recorded video.',
+      format: 'Slides + spoken delivery',
+      length: '12–15 minutes',
+      grading: 'Argument clarity, evidence, delivery, slide design, Q&A response'
+    },
+    phases: {
+      prep: {
+        colorClass: 'panel-header-prep',
+        titleColor: 'color-prep',
+        dot: 'dot-prep',
+        label: 'Preparation — Before Work Begins',
+        desc: 'What students need before they can begin well',
+        learners: [
+          'Translating a written argument into an oral, visual form',
+          'Understanding the difference between a presentation and a paper read aloud',
+          'Designing slides that support, not replace, their spoken content',
+          'Practicing multiple times, alone and in front of others',
+          'Preparing for questions they cannot anticipate in advance'
+        ],
+        instructors: [
+          'Distinguishing oral argumentation from written argumentation explicitly',
+          'Sharing models of effective (and ineffective) academic presentations',
+          'Clarifying slide design expectations — what counts as "too much text"',
+          'Scheduling a check-in on topic/argument before design work begins',
+          'Establishing Q&A norms so students know what to expect'
+        ],
+        pinchpoints: [
+          'Students design slides first and argument second — the medium drives the thinking',
+          'Presentation feels like "showing homework" rather than communicating to an audience',
+          'Students under-practice because the deadline is abstract until it arrives',
+          'Students don't distinguish between what is on the slide and what they will say'
+        ],
+        assumptions: [
+          'Students have delivered academic presentations before',
+          'Students understand the relationship between slide text and spoken words',
+          'Students will practice independently — without external accountability',
+          'Slide software proficiency is not a barrier to entry'
+        ],
+        ai: [
+          'AI can generate slide content and speaker notes rapidly — reducing original thinking',
+          'AI-generated slides may be polished but disconnected from the student's own research',
+          'Productively: AI as a practice audience — "What questions might an audience member ask?"',
+          'Ask students to narrate their design decisions in a brief cover note'
+        ]
+      },
+      prod: {
+        colorClass: 'panel-header-prod',
+        titleColor: 'color-prod',
+        dot: 'dot-prod',
+        label: 'Production — While Work Is Being Made',
+        desc: 'The rehearsal, revision, and performance involved in oral delivery',
+        learners: [
+          'Building and revising slides in parallel with refining the spoken argument',
+          'Rehearsing aloud — a fundamentally different experience than silent review',
+          'Timing the presentation and learning what to cut',
+          'Managing anxiety, pacing, and eye contact as simultaneous demands',
+          'Preparing responses to likely and unlikely questions'
+        ],
+        instructors: [
+          'Offering a formal dry-run option for students who want feedback before delivery',
+          'Creating a respectful, engaged audience culture in the class',
+          'Clarifying how to handle technical difficulties',
+          'Making the Q&A a learning experience, not an interrogation',
+          'If recording, providing technical guidance on audio and visual quality'
+        ],
+        pinchpoints: [
+          'Students practice from slides, not from a coherent argument — delivery fragments',
+          'No one tells students how long 12 minutes actually feels to deliver',
+          'Anxiety concentrates during delivery and disrupts recall',
+          'Q&A feels threatening rather than intellectually generative'
+        ],
+        assumptions: [
+          'Students will rehearse the spoken component, not just review the slides',
+          'Classmates will be attentive, respectful audience members',
+          'Technical equipment is reliable and familiar to students',
+          'Students know how to manage time across a multi-part presentation'
+        ],
+        ai: [
+          'AI can simulate an audience and generate Q&A questions for rehearsal practice',
+          'Students may rely on AI-generated speaker notes they haven't internalized',
+          'Productively: AI roleplay as a skeptical audience member during prep',
+          'In-the-moment delivery cannot be AI-assisted — authenticity is built in the structure'
+        ]
+      },
+      proc: {
+        colorClass: 'panel-header-proc',
+        titleColor: 'color-proc',
+        dot: 'dot-proc',
+        label: 'Processing — After Submission',
+        desc: 'Consolidating learning from performance and audience feedback',
+        learners: [
+          'Reflecting on the gap between preparation and delivery',
+          'Integrating questions raised during Q&A as genuine intellectual input',
+          'Watching peer presentations as a learner, not just a waiting performer',
+          'Identifying what they would do differently and why',
+          'Connecting the presentation experience to future communication contexts'
+        ],
+        instructors: [
+          'Providing specific oral or written feedback shortly after delivery',
+          'Facilitating a debrief where the class synthesizes what they heard across presentations',
+          'Naming what worked — particularly for students who are not confident presenters',
+          'Making connections between different groups' arguments',
+          'Treating Q&A responses as evidence of depth, not just performance'
+        ],
+        pinchpoints: [
+          'Students stop listening after they have presented — the last sessions get less attention',
+          'Feedback arrives too late or not at all',
+          'No synthesis across presentations — learning stays siloed per group',
+          'Students see the grade as the final word, not the beginning of reflection'
+        ],
+        assumptions: [
+          'Students are actively learning from watching their peers present',
+          'The Q&A generates insight that carries forward',
+          'Instructor feedback reaches students in a usable form and time frame',
+          'Students know what growth looks like after a presentation experience'
+        ],
+        ai: [
+          'AI can help students draft a post-presentation reflection to consolidate learning',
+          'Ask students to document one question from Q&A that changed or complicated their thinking',
+          'AI has no role in capturing the relational, real-time dimension of live presentation'
+        ]
+      }
+    }
+  },
+
+  project: {
+    name: 'Research Project',
+    icon: '🗂️',
+    surface: {
+      title: 'Research Project — Original Inquiry',
+      prompt: 'Over the course of the semester, you will develop an original research project on a topic of your choosing within the domain of this course. Your project will include a proposal, an annotated bibliography, a first draft, peer review, and a final submission. Each milestone will receive feedback. The final project should demonstrate genuine inquiry and contribute something original to your understanding of the topic.',
+      objectives: 'Practice original research; develop a sustained inquiry over time; learn to use feedback iteratively; produce extended scholarly work.',
+      deliverable: 'A 4,000–5,000-word research paper with five staged milestone submissions.',
+      format: 'Academic research paper',
+      length: '4,000–5,000 words + five milestones',
+      grading: 'Research quality, use of feedback, argument development, conventions'
+    },
+    phases: {
+      prep: {
+        colorClass: 'panel-header-prep',
+        titleColor: 'color-prep',
+        dot: 'dot-prep',
+        label: 'Preparation — Before Work Begins',
+        desc: 'What students need before they can begin well',
+        learners: [
+          'Choosing a topic that is genuinely interesting and researchable — not too broad or too narrow',
+          'Understanding what original inquiry means in this discipline',
+          'Learning to search databases, evaluate sources, and track citations',
+          'Developing a research question before settling on an argument',
+          'Managing a long-term, multi-stage project without prior scaffolding'
+        ],
+        instructors: [
+          'Offering topic consultation before the proposal deadline',
+          'Distinguishing between a topic, a research question, and a thesis',
+          'Providing research method instruction appropriate to the discipline',
+          'Making the milestone calendar visible and explaining why each stage matters',
+          'Modeling what a strong proposal looks like with an annotated example'
+        ],
+        pinchpoints: [
+          'Students choose topics based on familiarity, not intellectual curiosity',
+          'The proposal is treated as a formality rather than a research commitment',
+          'Students confuse having sources with having a research question',
+          'The timeline seems distant until it suddenly isn't'
+        ],
+        assumptions: [
+          'Students know how to identify a genuine research gap or question',
+          'Students have access to and know how to use academic databases',
+          'Students can evaluate source quality, not just source existence',
+          'Long-term project management is a skill they have already developed'
+        ],
+        ai: [
+          'AI can generate research questions and annotated bibliography entries rapidly',
+          'Students may outsource topic development to AI — bypassing the intellectual work of inquiry',
+          'Productively: AI to stress-test a research question — "What would a critic of this question say?"',
+          'Proposal conferences create accountability that AI cannot replicate'
+        ]
+      },
+      prod: {
+        colorClass: 'panel-header-prod',
+        titleColor: 'color-prod',
+        dot: 'dot-prod',
+        label: 'Production — While Work Is Being Made',
+        desc: 'The sustained intellectual labor of research, drafting, and revision',
+        learners: [
+          'Moving between reading, note-taking, drafting, and revising over weeks',
+          'Incorporating feedback from earlier milestones into current drafts',
+          'Managing intellectual momentum when the project stalls',
+          'Developing an argument that changes as research deepens',
+          'Balancing depth in one area with adequacy across the whole project'
+        ],
+        instructors: [
+          'Returning milestone feedback promptly enough to be actionable',
+          'Running peer review with explicit protocols, not just "give feedback"',
+          'Holding mid-project check-ins for students showing signs of struggle',
+          'Making the feedback loop visible — not just commenting, but explaining how to use it',
+          'Adjusting expectations mid-project when scope problems are identified early'
+        ],
+        pinchpoints: [
+          'Students do not incorporate milestone feedback — each draft treats itself as a first draft',
+          'Peer review produces vague encouragement rather than substantive critique',
+          'The project stalls at mid-semester and never fully recovers',
+          'Students prioritize word count over argument quality'
+        ],
+        assumptions: [
+          'Students know how to use written feedback to revise — not just accept or ignore it',
+          'Milestones are actually submitted and used as learning checkpoints',
+          'Research deepens the argument rather than just accumulating to a required number of sources',
+          'Peer reviewers have sufficient expertise and commitment to give useful feedback'
+        ],
+        ai: [
+          'AI can generate large sections of text that bypass genuine research engagement',
+          'Productively: AI as research assistant — summarizing a difficult article for initial orientation',
+          'Students may outsource synthesis to AI, producing fluent but hollow arguments',
+          'Milestone submissions with instructor conferences create accountability AI cannot replace'
+        ]
+      },
+      proc: {
+        colorClass: 'panel-header-proc',
+        titleColor: 'color-proc',
+        dot: 'dot-proc',
+        label: 'Processing — After Submission',
+        desc: 'Integrating a semester of research into durable understanding',
+        learners: [
+          'Reading the final evaluation as a synthesis of the whole project arc',
+          'Reflecting on how their research question evolved and why',
+          'Identifying what they now know that they didn't at the proposal stage',
+          'Connecting research skills to future academic or professional contexts',
+          'Deciding whether to develop, publish, or archive the project'
+        ],
+        instructors: [
+          'Providing a summative response that addresses the whole arc — not just the final draft',
+          'Facilitating a class-level debrief: What did we learn collectively across projects?',
+          'Offering a portfolio or publication pathway for exceptional work',
+          'Asking students what surprised them — treating reflection as a learning event',
+          'Identifying structural patterns in student challenges for future course redesign'
+        ],
+        pinchpoints: [
+          'A semester of work receives one final grade — and the project ends',
+          'Students never reflect on what changed from proposal to final draft',
+          'Learning stays attached to this assignment, not transferable skills',
+          'Instructor feedback on the final draft has nowhere to go — no revision, no follow-up'
+        ],
+        assumptions: [
+          'The final grade communicates something students can act on',
+          'Students know how to close a project — to integrate and conclude, not just stop writing',
+          'Research skills transfer automatically to the next context',
+          'Students understand their own intellectual growth without being asked to articulate it'
+        ],
+        ai: [
+          'A final reflection prompt comparing original proposal to final argument resists AI substitution',
+          'AI can help students draft a research abstract or professional summary of their findings',
+          'Productively: use AI as a "next-step" consultant — "Given this project, what might I research next?"',
+          'The accumulated learning of a semester-long project is most visible in reflection — design for it'
+        ]
+      }
+    }
+  }
+};
+
+/* ─── State ───────────────────────────────────────────────────────────── */
+let state = {
+  selectedAssignment: null,
+  selectedConcerns: [],
+  currentPhase: 'prep'
+};
+
+/* ─── Screen / Navigation ─────────────────────────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.setAttribute('aria-hidden', 'true');
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.removeAttribute('aria-hidden');
+  el.focus && el.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack(step) {
+  if (step === 'select') {
+    showStep('step-select');
+    updateHeader('Step 1 of 3', 1);
+  } else if (step === 'surface') {
+    showStep('step-surface');
+    updateHeader('Step 2 of 3', 2);
+  }
+}
+
+function restart() {
+  state = { selectedAssignment: null, selectedConcerns: [], currentPhase: 'prep' };
+  document.querySelectorAll('.assignment-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-pressed', 'false');
+  });
+  showStep('step-select');
+  updateHeader('Step 1 of 3', 1);
+}
+
+function showStep(stepId) {
+  ['step-select', 'step-surface', 'step-xray'].forEach(id => {
+    document.getElementById(id).style.display = id === stepId ? '' : 'none';
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateHeader(text, step) {
+  document.getElementById('header-step').textContent = text;
+  ['pdot-1','pdot-2','pdot-3'].forEach((id, i) => {
+    const dot = document.getElementById(id);
+    dot.classList.remove('active', 'done');
+    if (i + 1 < step) dot.classList.add('done');
+    else if (i + 1 === step) dot.classList.add('active');
+    const labels = ['Step 1: Select assignment', 'Step 2: Surface view', 'Step 3: X-Ray view'];
+    const status = i + 1 < step ? ', completed' : i + 1 === step ? ', current' : '';
+    dot.setAttribute('aria-label', labels[i] + status);
+  });
+}
+
+/* ─── Assignment Selection ────────────────────────────────────────────── */
+function selectAssignment(key) {
+  state.selectedAssignment = key;
+  document.querySelectorAll('.assignment-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-pressed', 'false');
+  });
+  const card = document.getElementById('card-' + key);
+  card.classList.add('selected');
+  card.setAttribute('aria-pressed', 'true');
+
+  const btn = document.getElementById('btn-to-surface');
+  btn.disabled = false;
+  btn.removeAttribute('aria-disabled');
+}
+
+/* ─── Surface View ────────────────────────────────────────────────────── */
+function goToSurface() {
+  if (!state.selectedAssignment) return;
+  const data = assignments[state.selectedAssignment];
+  const s = data.surface;
+
+  document.getElementById('surface-title').textContent = s.title;
+  document.getElementById('surface-prompt').textContent = s.prompt;
+  document.getElementById('surface-objectives').textContent = s.objectives;
+  document.getElementById('surface-deliverable').textContent = s.deliverable;
+  document.getElementById('surface-format').textContent = s.format;
+  document.getElementById('surface-length').textContent = s.length;
+  document.getElementById('surface-grading').textContent = s.grading;
+
+  // Reset concerns
+  state.selectedConcerns = [];
+  document.querySelectorAll('.concern-chip').forEach(c => {
+    c.classList.remove('active');
+    c.setAttribute('aria-pressed', 'false');
+  });
+
+  showStep('step-surface');
+  updateHeader('Step 2 of 3', 2);
+}
+
+/* ─── Concern chips ───────────────────────────────────────────────────── */
+function toggleConcern(btn) {
+  btn.classList.toggle('active');
+  const isActive = btn.classList.contains('active');
+  btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  const text = btn.textContent.trim();
+  if (isActive) {
+    if (!state.selectedConcerns.includes(text)) state.selectedConcerns.push(text);
+  } else {
+    state.selectedConcerns = state.selectedConcerns.filter(c => c !== text);
+  }
+}
+
+/* ─── X-Ray trigger ──────────────────────────────────────────────────── */
+function triggerXray() {
+  const overlay = document.getElementById('scan-overlay');
+  overlay.classList.add('active');
+
+  // Rebuild scan line for re-animation
+  const oldLine = document.getElementById('scan-line');
+  const newLine = oldLine.cloneNode(true);
+  oldLine.replaceWith(newLine);
+
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    buildXray();
+    showStep('step-xray');
+    updateHeader('Step 3 of 3', 3);
+    showPhase('prep');
+  }, 1800);
+}
+
+/* ─── X-Ray Build ────────────────────────────────────────────────────── */
+function buildXray() {
+  const data = assignments[state.selectedAssignment];
+  document.getElementById('xray-context-name').textContent = data.name;
+
+  const concern = state.selectedConcerns.length > 0
+    ? 'Noted concern: ' + state.selectedConcerns[0]
+    : '';
+  document.getElementById('xray-context-concern').textContent = concern;
+}
+
+/* ─── Phase rendering ─────────────────────────────────────────────────── */
+function showPhase(phaseKey) {
+  state.currentPhase = phaseKey;
+  const data = assignments[state.selectedAssignment];
+  const phase = data.phases[phaseKey];
+
+  // Update tabs
+  ['prep','prod','proc'].forEach(k => {
+    const tab = document.getElementById('tab-' + k);
+    tab.classList.toggle('active', k === phaseKey);
+    tab.setAttribute('aria-selected', k === phaseKey ? 'true' : 'false');
+  });
+
+  const colorClass = phase.colorClass;
+  const titleColor = phase.titleColor;
+  const dot = phase.dot;
+
+  function listItems(arr, extraClass = '') {
+    return arr.map(item =>
+      `<li class="${extraClass}">${escHtml(item)}</li>`
+    ).join('');
+  }
+
+  const html = `
+    <div class="phase-panel">
+      <div class="panel-header ${colorClass}">
+        <div>
+          <div class="panel-header-title ${titleColor}">${escHtml(phase.label)}</div>
+          <div class="panel-header-desc">${escHtml(phase.desc)}</div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <div class="detail-block">
+          <div class="detail-block-label">
+            <span class="label-dot ${dot}" aria-hidden="true"></span>
+            What Learners Are Doing
+          </div>
+          <ul aria-label="What learners are doing">
+            ${listItems(phase.learners)}
+          </ul>
+        </div>
+
+        <div class="detail-block">
+          <div class="detail-block-label">
+            <span class="label-dot ${dot}" aria-hidden="true"></span>
+            What Instructors Are Doing
+          </div>
+          <ul aria-label="What instructors are doing">
+            ${listItems(phase.instructors)}
+          </ul>
+        </div>
+
+        <div class="detail-block">
+          <div class="detail-block-label">
+            <span class="label-dot dot-warn" aria-hidden="true"></span>
+            Likely Pinch Points
+          </div>
+          <ul aria-label="Likely pinch points">
+            ${listItems(phase.pinchpoints, 'pinch-item')}
+          </ul>
+        </div>
+
+        <div class="detail-block">
+          <div class="detail-block-label">
+            <span class="label-dot dot-info" aria-hidden="true"></span>
+            Hidden Assumptions
+          </div>
+          <ul aria-label="Hidden assumptions">
+            ${listItems(phase.assumptions, 'assumption-item')}
+          </ul>
+        </div>
+
+        <div class="detail-block detail-block-full">
+          <div class="detail-block-label">
+            <span class="label-dot dot-ai" aria-hidden="true"></span>
+            AI in This Phase
+          </div>
+          <ul aria-label="AI roles in this phase">
+            ${listItems(phase.ai, 'ai-item')}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.getElementById('phase-content').innerHTML = html;
+}
+
+/* ─── Utilities ───────────────────────────────────────────────────────── */
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+</script>
+</body>
+</html>
